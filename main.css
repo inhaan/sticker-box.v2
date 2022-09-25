@@ -1,0 +1,55 @@
+#stickerContainer {
+    position: relative;
+}
+
+.sticker {
+    position: absolute;
+    width: 300px;
+    background-color: seagreen;
+    padding: 1rem;
+}
+
+.draggable:hover {
+    cursor: pointer;
+}
+
+.item-container {
+    list-style-type: none;
+    padding: 0.5rem 1rem;
+    min-height: 20px;
+    margin: 0;
+}
+
+.item {
+    background-color: #eee;
+    margin: 0.3rem 0;
+    padding: 10px;
+}
+
+.item.ghost {
+    position: absolute;
+    margin: 0;
+    list-style-type: none;
+    z-index: 1000;
+    box-shadow: 0 10px 30px -10px #888;
+    transform: rotate(5deg);
+}
+
+.placeholder {
+    margin: 0.3rem 0;
+    background-color: rgba(100, 100, 100, 0.3);
+}
+
+.hidden {
+    display: none;
+}
+
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Old versions of Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome, Edge, Opera and Firefox */
+  }
