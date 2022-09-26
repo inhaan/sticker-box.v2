@@ -9,6 +9,10 @@
     padding: 1rem;
 }
 
+.sticker .input-title {
+    display: block;
+}
+
 .draggable:hover {
     cursor: pointer;
 }

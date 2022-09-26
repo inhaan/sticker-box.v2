@@ -4,7 +4,6 @@ import { createStickerChangeEvent, EVENT_NAME } from "./util.js";
 
 let _stickerTop = 0;
 let _stickerLeft = 0;
-let _titleIndex = 0;
 let _stickerZIndex = 0;
 
 export class Sticker {
@@ -15,6 +14,7 @@ export class Sticker {
     #top = 0;
     #left = 0;
     #stickerEl = null;
+    #titleEl = null;
     #itemContainerEl = null;
     #items = [];
 
@@ -32,6 +32,8 @@ export class Sticker {
         const titleEl = document.createElement("div");
         titleEl.textContent = this.title;
         stickerEl.append(titleEl);
+        this.#titleEl = titleEl;
+        titleEl.onmousedown = (event) => this.#onMousedownTitle(event);
 
         const btnAddItemEl = document.createElement("button");
         btnAddItemEl.textContent = "항목 추가";
@@ -79,7 +81,7 @@ export class Sticker {
             this.#top = _stickerTop = _stickerTop + 10;
             this.#left = _stickerLeft = _stickerLeft + 10;
         }
-        this.title = title ?? `Sticker${++_titleIndex}`;
+        this.title = title ?? "Sticker";
         this.backgroundColor = backgroundColor ?? this.#getRandomBackgroundColor();
         this.zIndex = zIndex ?? ++_stickerZIndex;
         if (_stickerZIndex < zIndex) {
@@ -99,6 +101,42 @@ export class Sticker {
         return this.#itemContainerEl;
     }
 
+    setInputableTitle() {
+        const inputTitleEl = document.createElement("input");
+        inputTitleEl.type = "text";
+        inputTitleEl.className = "input-title";
+        inputTitleEl.value = this.title;
+        this.#titleEl.before(inputTitleEl);
+
+        const completeEditing = () => {
+            if (inputTitleEl.value) {
+                this.title = inputTitleEl.value;
+                this.#titleEl.textContent = this.title;
+            }
+            inputTitleEl.remove();
+            this.#titleEl.classList.remove("hidden");
+
+            this.#stickerEl.dispatchEvent(createStickerChangeEvent());
+        };
+
+        inputTitleEl.onkeydown = (event) => {
+            if (event.key == "Enter") {
+                completeEditing();
+            }
+        };
+        inputTitleEl.onblur = () => completeEditing();
+
+        this.#titleEl.classList.add("hidden");
+
+        inputTitleEl.focus();
+        inputTitleEl.select();
+    }
+
+    delete() {
+        this.#stickerEl.remove();
+        deleteSticker(this);
+    }
+
     serialize() {
         return {
             title: this.title,
@@ -112,6 +150,26 @@ export class Sticker {
         };
     }
 
+    #onMousedownTitle(event) {
+        let isClick = true;
+        const initClientX = event.clientX;
+        const initClientY = event.clientY;
+
+        this.#titleEl.onmousemove = (event) => {
+            // 5px 이상 움직인 경우에만 클릭 취소
+            if (Math.abs(event.clientX - initClientX) > 5 || Math.abs(event.clientY - initClientY) > 5) {
+                isClick = false;
+            }
+        };
+        this.#titleEl.onmouseup = () => {
+            this.#titleEl.onmousemove = null;
+            this.#titleEl.onmouseup = null;
+            if (isClick) {
+                this.setInputableTitle();
+            }
+        };
+    }
+
     #onClickBtnAddItem() {
         const item = new StickerItem();
         this.#items.push(item);
@@ -120,6 +178,8 @@ export class Sticker {
         this.#itemContainerEl.append(itemEl);
 
         this.#stickerEl.dispatchEvent(createStickerChangeEvent());
+
+        item.setInputableContent();
     }
 
     #onDeleteItem(item) {
@@ -145,8 +205,7 @@ export class Sticker {
     }
 
     #onClickBtnDelSticker() {
-        this.#stickerEl.remove();
-        deleteSticker(this);
+        this.delete();
     }
 
     #getRandomBackgroundColor() {

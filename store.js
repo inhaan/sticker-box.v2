@@ -3,6 +3,10 @@ import { Sticker } from "./sticker.js";
 // 스티커 store
 const store = new Set();
 
+export function getStickers() {
+    return [...store];
+}
+
 export function addSticker(sticker) {
     store.add(sticker);
     saveStickers();
