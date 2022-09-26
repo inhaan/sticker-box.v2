@@ -1,6 +1,6 @@
 import { Sticker } from "./sticker.js";
 import { addSticker, getStickers, loadStickers, saveStickers } from "./store.js";
-import { EVENT_NAME } from "./util.js";
+import { EVENT_NAME } from "./customEvent.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("#btnCreateSticker").onclick = onClickBtnCreateSticker;
@@ -22,13 +22,15 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function onClickBtnCreateSticker() {
+    // 스티커 생성
     const sticker = new Sticker();
     document.querySelector("#stickerContainer").append(sticker.getStickerEl());
     addSticker(sticker);
 
+    // 스티커 제목 입력
     sticker.setInputableTitle();
 }
 
 function onClickBtnDeleteAllSticker() {
-    getStickers().forEach((sticker) => sticker.delete());
+    getStickers()?.forEach((sticker) => sticker.delete());
 }

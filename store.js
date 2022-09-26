@@ -17,6 +17,10 @@ export function deleteSticker(sticker) {
     saveStickers();
 }
 
+/**
+ * 스티커 정보 localStorage에 저장
+ * - debounce로 지연 실행하여 잦은 반복 요청에 대해 대처한다
+ */
 export const saveStickers = _.debounce(() => {
     const stickers = [];
     for (const sticker of store) {
@@ -26,6 +30,11 @@ export const saveStickers = _.debounce(() => {
     localStorage.setItem("stickers", JSON.stringify(stickers));
 }, 200);
 
+/**
+ * 스티커 로드
+ * - localStorage에 저장된 데이터로 스티커를 다시 생성한다
+ * @returns
+ */
 export function loadStickers() {
     const serialized = localStorage.getItem("stickers");
     if (!serialized) {

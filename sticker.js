@@ -1,6 +1,6 @@
 import { StickerItem } from "./stickerItem.js";
 import { deleteSticker } from "./store.js";
-import { createStickerChangeEvent, EVENT_NAME } from "./util.js";
+import { createStickerChangeEvent, EVENT_NAME } from "./customEvent.js";
 
 let _stickerTop = 0;
 let _stickerLeft = 0;
@@ -19,8 +19,10 @@ export class Sticker {
     #items = [];
 
     constructor(title, backgroundColor, zIndex, position, items) {
+        // 초기화
         this.#init(title, backgroundColor, zIndex, position, items);
 
+        // 스티커
         const stickerEl = document.createElement("div");
         stickerEl.className = "sticker draggable";
         stickerEl.style.zIndex = this.zIndex;
@@ -29,21 +31,25 @@ export class Sticker {
         stickerEl.style.left = `${this.#left}px`;
         this.#stickerEl = stickerEl;
 
+        // 제목
         const titleEl = document.createElement("div");
         titleEl.textContent = this.title;
         stickerEl.append(titleEl);
         this.#titleEl = titleEl;
         titleEl.onmousedown = (event) => this.#onMousedownTitle(event);
 
+        // 항목 추가
         const btnAddItemEl = document.createElement("button");
         btnAddItemEl.textContent = "항목 추가";
         stickerEl.append(btnAddItemEl);
 
+        // 스티커 삭제
         const btnDelStickerEl = document.createElement("button");
         btnDelStickerEl.textContent = "스티커 삭제";
         btnDelStickerEl.onclick = () => this.#onClickBtnDelSticker();
         stickerEl.append(btnDelStickerEl);
 
+        // 항목 컨테이너
         const itemContainerEl = document.createElement("ul");
         itemContainerEl.className = "item-container droppable";
         stickerEl.append(itemContainerEl);
@@ -51,6 +57,7 @@ export class Sticker {
 
         btnAddItemEl.onclick = () => this.#onClickBtnAddItem();
 
+        // 항목 관련 이벤트 핸들링
         stickerEl.addEventListener(EVENT_NAME.deleteStickerItem, (event) => {
             this.#onDeleteItem(event.detail);
         });
@@ -58,13 +65,21 @@ export class Sticker {
             this.#onMoveItem(event.detail);
         });
 
+        // 드래그 기능
         this.#makeDraggableSticker();
     }
 
+    /**
+     * 스티커 객체의 직렬화된 데이터로 다시 스티커 객체를 생성한다
+     * @param {*} data
+     * @returns
+     */
     static deserialize(data) {
+        // 스티커 객체 생성
         const items = data.items.map((item) => StickerItem.deserialize(item));
         const sticker = new Sticker(data.title, data.backgroundColor, data.zIndex, data.position, items);
 
+        // 스티커 항목 요소 붙이기
         const itemContainerEl = sticker.getItemContainerEl();
         items.forEach((item) => {
             itemContainerEl.append(item.getItemEl());
@@ -101,13 +116,18 @@ export class Sticker {
         return this.#itemContainerEl;
     }
 
+    /**
+     * 스티커 제목 입력 가능하도록 변경
+     */
     setInputableTitle() {
+        // 입력 요소 생성
         const inputTitleEl = document.createElement("input");
         inputTitleEl.type = "text";
         inputTitleEl.className = "input-title";
         inputTitleEl.value = this.title;
         this.#titleEl.before(inputTitleEl);
 
+        // 수정 완료시 작업
         const completeEditing = () => {
             if (inputTitleEl.value) {
                 this.title = inputTitleEl.value;
@@ -116,9 +136,11 @@ export class Sticker {
             inputTitleEl.remove();
             this.#titleEl.classList.remove("hidden");
 
+            // 스티커 변경 이벤트
             this.#stickerEl.dispatchEvent(createStickerChangeEvent());
         };
 
+        // 수정 완료 이벤트 핸들링
         inputTitleEl.onkeydown = (event) => {
             if (event.key == "Enter") {
                 completeEditing();
@@ -126,8 +148,10 @@ export class Sticker {
         };
         inputTitleEl.onblur = () => completeEditing();
 
+        // 원본 숨김
         this.#titleEl.classList.add("hidden");
 
+        // 포커스 및 선택
         inputTitleEl.focus();
         inputTitleEl.select();
     }
@@ -137,6 +161,10 @@ export class Sticker {
         deleteSticker(this);
     }
 
+    /**
+     * 스티커 객체의 직렬화된 데이터를 반환한다
+     * @returns
+     */
     serialize() {
         return {
             title: this.title,
@@ -151,12 +179,15 @@ export class Sticker {
     }
 
     #onMousedownTitle(event) {
+        // 제목을 클릭할 때만 제목을 수정할 수 있도록 한다
+        // 제목을 드래그하면 수정모드로 변경되지 않는다
+
         let isClick = true;
         const initClientX = event.clientX;
         const initClientY = event.clientY;
 
         this.#titleEl.onmousemove = (event) => {
-            // 5px 이상 움직인 경우에만 클릭 취소
+            // 5px 이상 움직이면 클릭 취소
             if (Math.abs(event.clientX - initClientX) > 5 || Math.abs(event.clientY - initClientY) > 5) {
                 isClick = false;
             }
@@ -177,30 +208,42 @@ export class Sticker {
         const itemEl = item.getItemEl();
         this.#itemContainerEl.append(itemEl);
 
+        // 스티커 변경 이벤트
         this.#stickerEl.dispatchEvent(createStickerChangeEvent());
 
+        // 항목 컨텐츠 입력
         item.setInputableContent();
     }
 
+    /**
+     * 항목 삭제 이벤트 핸들링
+     * @param {*} item
+     */
     #onDeleteItem(item) {
         this.#items = this.#items.filter((x) => x !== item);
 
+        // 스티커 변경 이벤트
         this.#stickerEl.dispatchEvent(createStickerChangeEvent());
     }
 
+    /**
+     * 항목 이동 이벤트 핸들링
+     * @param {*} item
+     */
     #onMoveItem(item) {
-        //새로운 항목 추가
+        // 새로운 항목 추가
         if (!this.#items.some((x) => x === item)) {
             this.#items.push(item);
         }
 
-        //DOM 객체 확인하고 순서에 따라 새로 items 생성
+        // DOM 객체 확인하고 순서에 따라 새로 items 생성
         const newItems = [];
         for (const itemEl of this.#stickerEl.querySelectorAll(".item:not(.hidden)")) {
             newItems.push(this.#items.find((x) => x.id === itemEl.id));
         }
         this.#items = newItems;
 
+        // 스티커 변경 이벤트
         this.#stickerEl.dispatchEvent(createStickerChangeEvent());
     }
 
@@ -254,6 +297,7 @@ export class Sticker {
                 this.#top = parseInt(this.#stickerEl.style.top);
                 this.#left = parseInt(this.#stickerEl.style.left);
 
+                // 스티커 변경 이벤트
                 this.#stickerEl.dispatchEvent(createStickerChangeEvent());
             };
             document.addEventListener("mouseup", onMouseUp);
